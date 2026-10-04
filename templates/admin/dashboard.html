@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Security & Custody Center - CampusFind{% endblock %}
+
+{% block head %}
+<!-- Chart.js CDN for Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl mx-auto">
+
+    <!-- Header Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-slate-900 text-white shadow-lg">
+        <div class="space-y-1">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-400">Security Desk Control Center</span>
+            </div>
+            <h1 class="text-2xl font-black">Campus Custody & Repository Administration</h1>
+            <p class="text-xs text-slate-400">Manage storage locker bins, adjudicate disputed claims, and audit physical handovers.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('export_csv') }}" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-2">
+                <i class="fa-solid fa-file-csv text-base"></i>
+                <span>Export Audit CSV</span>
+            </a>
+            <a href="{{ url_for('report_item', type='found') }}" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Log Deposited Item</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Total Items</span>
+            <p class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ total_items }}</p>
+            <span class="text-[10px] text-slate-400">Registered on portal</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-rose-500">Active Lost</span>
+            <p class="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{{ active_lost }}</p>
+            <span class="text-[10px] text-slate-400">Unresolved searches</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-emerald-500">In Custody / Found</span>
+            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ active_found }}</p>
+            <span class="text-[10px] text-slate-400">In campus lockers</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-amber-500">Pending Claims</span>
+            <p class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{{ pending_claims }}</p>
+            <span class="text-[10px] text-slate-400">Awaiting review</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm col-span-2 lg:col-span-1">
+            <span class="text-[11px] font-bold uppercase text-indigo-500">Reunited</span>
+            <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{{ resolved_items }}</p>
+            <span class="text-[10px] text-slate-400">Verified handovers</span>
+        </div>
+    </div>
+
+    <!-- Charts & Analytics Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Category Chart -->
+        <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-xs">
+                Belongings by Category
+            </h3>
+            <div class="h-64 flex items-center justify-center">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Pending Claims Oversight Queue -->
+        <div class="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-xs">
+                        Ownership Claims Queue
+                    </h3>
+                    <span class="text-xs text-slate-400">{{ recent_claims|length }} records</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[10px]">
+                                <th class="pb-2">Claim ID</th>
+                                <th class="pb-2">Item Title</th>
+                                <th class="pb-2">Claimant</th>
+                                <th class="pb-2">Status</th>
+                                <th class="pb-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            {% for claim in recent_claims %}
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-3 font-mono font-bold text-slate-500">#{{ claim.id }}</td>
+                                <td class="py-3 font-semibold text-slate-900 dark:text-white max-w-[180px] truncate">
+                                    {{ claim.item.title }}
+                                </td>
+                                <td class="py-3 text-slate-600 dark:text-slate-400">
+                                    {{ claim.claimant.name }}
+                                </td>
+                                <td class="py-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase
+                                        {% if claim.status == 'approved' %} bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                                        {% elif claim.status == 'completed' %} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+                                        {% elif claim.status == 'rejected' %} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+                                        {% else %} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 {% endif %}">
+                                        {{ claim.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-right">
+                                    <a href="{{ url_for('claim_detail', claim_id=claim.id) }}" class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition">
+                                        Review &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Storage Locker Inventory Manager -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Security Depository & Locker Tracking</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Assign physical locker bins in the Central Security Office for items under campus custody.</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px]">
+                        <th class="pb-3">Item ID</th>
+                        <th class="pb-3">Title & Category</th>
+                        <th class="pb-3">Discovery Spot</th>
+                        <th class="pb-3">Reporter</th>
+                        <th class="pb-3">Current Locker / Bin</th>
+                        <th class="pb-3 text-right">Update Bin</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for item in custody_items %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                        <td class="py-3 font-mono font-bold text-slate-500">#{{ item.id }}</td>
+                        <td class="py-3">
+                            <a href="{{ url_for('item_detail', item_id=item.id) }}" class="font-bold text-slate-900 dark:text-white hover:text-blue-500">
+                                {{ item.title }}
+                            </a>
+                            <span class="block text-[11px] text-slate-400">{{ item.category }}</span>
+                        </td>
+                        <td class="py-3 text-slate-600 dark:text-slate-400">
+                            {{ item.location.name if item.location else 'Campus' }}
+                        </td>
+                        <td class="py-3 text-slate-600 dark:text-slate-400">
+                            {{ item.reporter.name }}
+                        </td>
+                        <td class="py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                            {{ item.storage_locker_number or 'Unassigned' }}
+                        </td>
+                        <td class="py-3 text-right">
+                            <form method="POST" action="{{ url_for('update_storage', item_id=item.id) }}" class="inline-flex items-center gap-1.5 justify-end">
+                                <input type="text" name="storage_locker_number" value="{{ item.storage_locker_number or '' }}" placeholder="e.g. SEC-B-14" class="px-2.5 py-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-28">
+                                <button type="submit" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition">
+                                    Save
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Security Audit Logs -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Security Activity Audit Trail</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Tamper-evident logs of all reporting, claiming, and handover transactions.</p>
+        </div>
+
+        <div class="space-y-2">
+            {% for log in audit_logs %}
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                        {{ log.action }}
+                    </span>
+                    <span class="text-slate-700 dark:text-slate-300">{{ log.details }}</span>
+                </div>
+                <span class="text-[11px] text-slate-400 shrink-0 ml-2">
+                    {{ log.created_at.strftime('%b %d, %I:%M %p') }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Initialize Chart.js Category Breakdown Chart
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        const labels = {{ cat_labels | tojson }};
+        const counts = {{ cat_counts | tojson }};
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: [
+                        '#3b82f6', '#10b981', '#f59e0b', '#ec4899', 
+                        '#8b5cf6', '#06b6d4', '#64748b'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

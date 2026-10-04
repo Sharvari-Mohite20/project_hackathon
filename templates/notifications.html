@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - CampusFind{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white">Activity Notifications</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Match alerts, claim reviews, and handover updates.</p>
+        </div>
+    </div>
+
+    <!-- Notification Feed -->
+    <div class="space-y-3">
+        {% if notifications %}
+            {% for notif in notifications %}
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-start gap-3.5 {% if not notif.is_read %}border-l-4 border-l-blue-600{% endif %}">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-sm mt-0.5
+                    {% if notif.type == 'match_found' %} bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400
+                    {% elif notif.type == 'claim_approved' %} bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400
+                    {% elif notif.type == 'claim_rejected' %} bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400
+                    {% elif notif.type == 'claim_received' %} bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400
+                    {% else %} bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 {% endif %}">
+                    {% if notif.type == 'match_found' %}<i class="fa-solid fa-satellite-dish"></i>
+                    {% elif notif.type == 'claim_approved' %}<i class="fa-solid fa-circle-check"></i>
+                    {% elif notif.type == 'claim_rejected' %}<i class="fa-solid fa-circle-xmark"></i>
+                    {% elif notif.type == 'claim_received' %}<i class="fa-solid fa-inbox"></i>
+                    {% else %}<i class="fa-solid fa-bell"></i>{% endif %}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">{{ notif.title }}</h4>
+                        <span class="text-[10px] text-slate-400">{{ notif.created_at.strftime('%b %d, %I:%M %p') }}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ notif.message }}</p>
+                    {% if notif.link %}
+                    <div class="mt-2">
+                        <a href="{{ notif.link }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                            View details &rarr;
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-12 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400">
+                <i class="fa-regular fa-bell-slash text-2xl mb-2 text-slate-300"></i>
+                <p class="font-medium text-slate-600 dark:text-slate-300">You're all caught up!</p>
+                <p class="text-[11px] mt-0.5">No new notifications at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

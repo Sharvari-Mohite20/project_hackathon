@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Report an Item - CampusFind{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="text-center space-y-2">
+        <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">Campus Report Portal</h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Submit a lost or found report to notify the university community and initiate automated matching.
+        </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-10">
+        
+        <form method="POST" action="{{ url_for('report_item') }}" enctype="multipart/form-data" id="report-form" class="space-y-6">
+            
+            <!-- Type Selector Tabs (Lost vs Found) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    What are you reporting?
+                </label>
+                <div class="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="item_type" value="lost" id="type-lost" class="peer sr-only" {% if request.args.get('type') != 'found' %}checked{% endif %}>
+                        <div class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400 peer-checked:bg-rose-600 peer-checked:text-white peer-checked:shadow-md transition">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>I Lost Something</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer">
+                        <input type="radio" name="item_type" value="found" id="type-found" class="peer sr-only" {% if request.args.get('type') == 'found' %}checked{% endif %}>
+                        <div class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:shadow-md transition">
+                            <i class="fa-solid fa-hand-holding-heart"></i>
+                            <span>I Found Something</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Title & Category Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Item Title <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="title" required
+                           placeholder="e.g. Apple AirPods Pro 2, Blue Spigen Case"
+                           class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Category <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="category" required class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Campus Location & Specific Spot -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Campus Building / Zone <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="location_id" required class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Campus Spot</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}">{{ loc.name }} ({{ loc.zone }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Specific Spot / Room / Desk
+                    </label>
+                    <input type="text" name="specific_location"
+                           placeholder="e.g. 2nd Floor Silent Room Desk 14, or Juice Stall"
+                           class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- Date & Contact Preference -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Date Lost or Found <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" name="date_lost_or_found" required
+                           value="{{ datetime_utcnow_str }}"
+                           class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Preferred Contact Mode
+                    </label>
+                    <select name="contact_preference" class="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="in_app">CampusFind In-App Chat (Recommended & Private)</option>
+                        <option value="email">College Email</option>
+                        <option value="phone">Phone Number</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Detailed Description -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Detailed Description <span class="text-rose-500">*</span>
+                </label>
+                <textarea name="description" rows="4" required
+                          placeholder="Provide visual clues: color, brand, condition, scratches, contents, stickers, or brand markings to help the smart matching engine..."
+                          class="w-full p-4 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <!-- Image Upload with Live Preview -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Upload Photo (Optional but Recommended)
+                </label>
+                <div class="image-upload-wrapper border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer relative">
+                    <input type="file" name="image" accept="image/*" data-preview="report-preview-img"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    
+                    <div class="upload-placeholder space-y-2">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-500 flex items-center justify-center mx-auto text-xl">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Click or Drag & Drop photo here</p>
+                        <p class="text-[11px] text-slate-400">PNG, JPG, JPEG, WEBP up to 16MB</p>
+                    </div>
+
+                    <img id="report-preview-img" alt="Preview" class="hidden max-h-48 rounded-xl mx-auto object-contain shadow-sm mt-2">
+                </div>
+            </div>
+
+            <!-- Conditional Section for LOST Items -->
+            <div id="lost-fields" class="p-4 sm:p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-4">
+                <h4 class="text-xs font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-flag text-rose-600"></i> Lost Item Settings
+                </h4>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Finder Reward Amount (₹ / INR, Optional)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-bold">₹</span>
+                            <input type="number" name="reward_amount" min="0" step="50" placeholder="0"
+                                   class="w-full pl-8 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center pt-5">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_urgent" value="1" class="rounded text-rose-600 focus:ring-rose-500">
+                            <span class="text-xs font-bold text-rose-900 dark:text-rose-200">
+                                Mark as High Priority / Urgent (Hall ticket, keys, wallet)
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditional Section for FOUND Items (Anti-Fraud) -->
+            <div id="found-fields" class="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 space-y-4 hidden">
+                <h4 class="text-xs font-bold text-emerald-900 dark:text-emerald-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-halved text-emerald-600"></i> Anti-Theft & Safe Custody
+                </h4>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Secret Verification Question <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="secret_verification_question"
+                           placeholder="e.g. 'What is the sticker on the back?' or 'Describe the lock screen wallpaper'"
+                           class="w-full px-4 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-slate-800 dark:text-slate-100">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        Anyone claiming this item must correctly answer this question to prove genuine ownership.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Current Custody / Where is it kept?
+                    </label>
+                    <input type="text" name="safe_custody_info"
+                           placeholder="e.g. 'Handed to Central Security Desk Locker' or 'Kept with me in Hostel Block A Room 204'"
+                           class="w-full px-4 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-slate-800 dark:text-slate-100">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Publish Report to Campus Portal</span>
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    // Dynamic toggle of Lost vs Found conditional fields
+    const typeLostRadio = document.getElementById('type-lost');
+    const typeFoundRadio = document.getElementById('type-found');
+    const lostFields = document.getElementById('lost-fields');
+    const foundFields = document.getElementById('found-fields');
+
+    function updateTypeFields() {
+        if (typeFoundRadio.checked) {
+            lostFields.classList.add('hidden');
+            foundFields.classList.remove('hidden');
+        } else {
+            lostFields.classList.remove('hidden');
+            foundFields.classList.add('hidden');
+        }
+    }
+
+    typeLostRadio.addEventListener('change', updateTypeFields);
+    typeFoundRadio.addEventListener('change', updateTypeFields);
+    updateTypeFields();
+
+    // Default date to today
+    const dateInput = document.querySelector('input[type="date"]');
+    if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+</script>
+{% endblock %}

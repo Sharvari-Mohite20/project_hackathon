@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}My Campus Belongings & Claims - CampusFind{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white">My Campus Dashboard</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Track your reported belongings, active claims, and handover statuses.</p>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('report_item') }}" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">
+                <i class="fa-solid fa-plus mr-1"></i> Report New Item
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs Container -->
+    <div class="space-y-6">
+        
+        <!-- Tab Selector Buttons -->
+        <div class="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <button onclick="switchTab('my-lost')" id="tab-btn-my-lost" class="tab-btn px-4 py-2 text-xs font-bold rounded-xl transition bg-blue-600 text-white shadow-sm">
+                <i class="fa-solid fa-magnifying-glass mr-1.5"></i> My Lost Reports ({{ my_lost|length }})
+            </button>
+            <button onclick="switchTab('my-found')" id="tab-btn-my-found" class="tab-btn px-4 py-2 text-xs font-bold rounded-xl transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                <i class="fa-solid fa-hand-holding-heart mr-1.5"></i> Items I Found ({{ my_found|length }})
+            </button>
+            <button onclick="switchTab('my-claims')" id="tab-btn-my-claims" class="tab-btn px-4 py-2 text-xs font-bold rounded-xl transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                <i class="fa-solid fa-file-shield mr-1.5"></i> My Submitted Claims ({{ my_claims|length }})
+            </button>
+            <button onclick="switchTab('received-claims')" id="tab-btn-received-claims" class="tab-btn px-4 py-2 text-xs font-bold rounded-xl transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                <i class="fa-solid fa-inbox mr-1.5"></i> Received Claims on My Items ({{ received_claims|length }})
+            </button>
+        </div>
+
+        <!-- 1. My Lost Items Panel -->
+        <div id="panel-my-lost" class="tab-panel space-y-4">
+            {% if my_lost %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for item in my_lost %}
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                                LOST
+                            </span>
+                            <span class="text-[11px] font-semibold {% if item.status == 'resolved' %}text-emerald-500{% elif item.status == 'pending_claim' %}text-amber-500{% else %}text-blue-500{% endif %}">
+                                {{ item.status.replace('_', ' ').capitalize() }}
+                            </span>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">{{ item.title }}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">{{ item.description }}</p>
+                        <p class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>{{ item.location.name if item.location else 'Campus' }}</p>
+                    </div>
+                    <div class="pt-4 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">{{ item.date_lost_or_found.strftime('%b %d, %Y') }}</span>
+                        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                            View Status &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                You haven't reported any lost belongings yet.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. My Found Items Panel -->
+        <div id="panel-my-found" class="tab-panel space-y-4 hidden">
+            {% if my_found %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for item in my_found %}
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                FOUND
+                            </span>
+                            <span class="text-[11px] font-semibold {% if item.status == 'resolved' %}text-emerald-500{% else %}text-blue-500{% endif %}">
+                                {{ item.status.replace('_', ' ').capitalize() }}
+                            </span>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">{{ item.title }}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">{{ item.description }}</p>
+                        <p class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>{{ item.location.name if item.location else 'Campus' }}</p>
+                    </div>
+                    <div class="pt-4 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">Custody: {{ item.safe_custody_info[:18] ~ '...' if item.safe_custody_info else 'In possession' }}</span>
+                        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+                            View Details &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                You haven't registered any found belongings.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. My Submitted Claims Panel -->
+        <div id="panel-my-claims" class="tab-panel space-y-4 hidden">
+            {% if my_claims %}
+            <div class="space-y-3">
+                {% for claim in my_claims %}
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ claim.item.title }}</h3>
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded
+                                {% if claim.status == 'approved' %} bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                                {% elif claim.status == 'completed' %} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+                                {% elif claim.status == 'rejected' %} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+                                {% else %} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 {% endif %}">
+                                {{ claim.status }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                            Your Proof: {{ claim.claim_description }}
+                        </p>
+                        <p class="text-[11px] text-slate-400">
+                            Claim filed on {{ claim.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        {% if claim.status == 'approved' and claim.handover_pin %}
+                        <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-key"></i>
+                            <span>PIN: {{ claim.handover_pin }}</span>
+                        </div>
+                        <a href="{{ url_for('claim_pass', claim_id=claim.id) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1">
+                            <i class="fa-solid fa-qrcode"></i> Claim Pass
+                        </a>
+                        {% endif %}
+
+                        <a href="{{ url_for('claim_detail', claim_id=claim.id) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition flex items-center gap-1">
+                            <i class="fa-solid fa-comments"></i> Discussion Thread
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                You have not filed any ownership claims.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 4. Received Claims on My Items Panel -->
+        <div id="panel-received-claims" class="tab-panel space-y-4 hidden">
+            {% if received_claims %}
+            <div class="space-y-3">
+                {% for claim in received_claims %}
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-500">On your item:</span>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ claim.item.title }}</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">
+                            Claimant: <strong>{{ claim.claimant.name }}</strong> ({{ claim.claimant.department or 'Student' }})
+                        </p>
+                        <p class="text-[11px] text-slate-400">
+                            Status: <strong class="uppercase text-slate-700 dark:text-slate-300">{{ claim.status }}</strong> &bull; Filed {{ claim.created_at.strftime('%b %d') }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <a href="{{ url_for('claim_detail', claim_id=claim.id) }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1">
+                            <i class="fa-solid fa-clipboard-check"></i> Review & Chat
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                No claims have been submitted on your reported items yet.
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+            b.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+        });
+
+        const activePanel = document.getElementById('panel-' + tabName);
+        const activeBtn = document.getElementById('tab-btn-' + tabName);
+        if (activePanel) activePanel.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+            activeBtn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Claim #{{ claim.id }} - {{ claim.item.title }} - CampusFind{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Top Navigation / Status Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <a href="{{ url_for('my_items') }}" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+            <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to My Items & Claims
+        </a>
+
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400">Claim #{{ claim.id }} Status:</span>
+            <span class="px-3 py-1 text-xs font-extrabold uppercase rounded-lg
+                {% if claim.status == 'approved' %} bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                {% elif claim.status == 'completed' %} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+                {% elif claim.status == 'rejected' %} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+                {% else %} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 {% endif %}">
+                {{ claim.status }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Handover Approval Banner (if Approved) -->
+    {% if claim.status == 'approved' %}
+    <div class="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border-2 border-emerald-500/30 dark:border-emerald-500/40 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-1.5 text-center md:text-left">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                <i class="fa-solid fa-circle-check"></i> Ownership Verified & Approved
+            </div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-white">Ready for Physical Handover!</h2>
+            <p class="text-xs text-slate-600 dark:text-slate-300 max-w-lg">
+                Present your 6-digit Handover PIN or QR Code at collection (e.g. Central Security Desk) to claim your item.
+            </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <div class="px-4 py-2 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-2xl text-center shadow-sm">
+                <span class="block text-[10px] uppercase font-bold text-slate-400">Handover PIN</span>
+                <span class="text-2xl font-black tracking-widest text-emerald-600 dark:text-emerald-400 font-mono">{{ claim.handover_pin }}</span>
+            </div>
+
+            <a href="{{ url_for('claim_pass', claim_id=claim.id) }}" class="px-4 py-3 rounded-2xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition flex items-center gap-2">
+                <i class="fa-solid fa-qrcode text-base"></i>
+                <span>Open Digital Pass</span>
+            </a>
+        </div>
+    </div>
+    {% elif claim.status == 'completed' %}
+    <div class="p-5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-center text-xs">
+        <i class="fa-solid fa-circle-check text-blue-500 text-2xl mb-1.5"></i>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Handover Verified & Resolved</h3>
+        <p class="text-slate-500 dark:text-slate-400 mt-0.5">This item was successfully returned to the owner. Case closed.</p>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Item & Claim Details -->
+        <div class="space-y-6">
+            
+            <!-- Item Mini Card -->
+            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Item In Claim</span>
+                
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                    <a href="{{ url_for('item_detail', item_id=claim.item.id) }}" class="hover:text-blue-500 transition">
+                        {{ claim.item.title }}
+                    </a>
+                </h3>
+
+                <div class="space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                    <p><i class="fa-solid fa-tag w-4 text-slate-400"></i> {{ claim.item.category }}</p>
+                    <p><i class="fa-solid fa-location-dot w-4 text-slate-400"></i> {{ claim.item.location.name if claim.item.location else 'Campus' }}</p>
+                    <p><i class="fa-regular fa-calendar w-4 text-slate-400"></i> {{ claim.item.date_lost_or_found.strftime('%b %d, %Y') }}</p>
+                    {% if claim.item.safe_custody_info %}
+                    <p><i class="fa-solid fa-shield-halved w-4 text-emerald-500"></i> {{ claim.item.safe_custody_info }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Claimant Information -->
+            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Claimant Profile</span>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">
+                        {{ claim.claimant.name[:1] }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-900 dark:text-white">{{ claim.claimant.name }}</p>
+                        <p class="text-[11px] text-slate-400">{{ claim.claimant.department or 'Student' }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                    <p><i class="fa-solid fa-id-card w-4 text-slate-400"></i> Roll/ID: {{ claim.claimant.student_id or 'N/A' }}</p>
+                    <p><i class="fa-solid fa-envelope w-4 text-slate-400"></i> {{ claim.claimant.email }}</p>
+                    {% if claim.claimant.phone %}
+                    <p><i class="fa-solid fa-phone w-4 text-slate-400"></i> {{ claim.claimant.phone }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review Actions (For Reporter or Admin) -->
+            {% if (is_reporter or is_admin) and claim.status == 'pending' %}
+            <div class="p-5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-4">
+                <h4 class="text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-gavel text-blue-600"></i> Claim Adjudication
+                </h4>
+                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Check if the answers and evidence match the actual item before approving.
+                </p>
+
+                <!-- Approve Form -->
+                <form method="POST" action="{{ url_for('review_claim', claim_id=claim.id) }}">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" onclick="return confirm('Approve this claim? This will generate a 6-digit Handover PIN.')" class="w-full py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Approve Ownership Claim</span>
+                    </button>
+                </form>
+
+                <!-- Reject Form -->
+                <form method="POST" action="{{ url_for('review_claim', claim_id=claim.id) }}" class="space-y-2">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="text" name="rejection_reason" placeholder="Reason for rejection (optional)" class="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+                    <button type="submit" onclick="return confirm('Reject this claim?')" class="w-full py-2 rounded-xl font-bold text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition">
+                        Reject Claim
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Handover Confirmation PIN Input (For Reporter or Admin when Approved) -->
+            {% if (is_reporter or is_admin) and claim.status == 'approved' %}
+            <div class="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-handshake text-amber-600"></i> Final Handover Verification
+                </h4>
+                <p class="text-[11px] text-slate-600 dark:text-slate-400">
+                    When the student arrives to collect the item, ask them for their 6-digit PIN and verify below:
+                </p>
+
+                <form method="POST" action="{{ url_for('verify_handover', claim_id=claim.id) }}" class="space-y-3">
+                    <div>
+                        <input type="text" name="handover_pin" required maxlength="6"
+                               placeholder="Enter 6-digit PIN" 
+                               class="w-full text-center tracking-widest text-lg font-mono font-bold py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition">
+                        Confirm Handover & Close Case
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right 2 Columns: Evidence & Direct Chat -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Claim Evidence Card -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-xs">
+                    Claimant's Proof of Ownership
+                </h3>
+
+                <!-- Secret Question & Answer Check -->
+                {% if claim.item.secret_verification_question %}
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Verification Question:</span>
+                        <p class="font-medium text-slate-700 dark:text-slate-300 italic">"{{ claim.item.secret_verification_question }}"</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <span class="text-slate-400 font-semibold block text-[11px]">Claimant's Answer:</span>
+                        <p class="font-bold text-slate-900 dark:text-white">{{ claim.answer_to_secret_question or 'No answer provided' }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Description of ownership -->
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 block mb-1">Statement of Ownership:</span>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {{ claim.claim_description }}
+                    </p>
+                </div>
+
+                <!-- Proof image (if any) -->
+                {% if claim.proof_image_path %}
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 block mb-1">Attached Proof Document / Photo:</span>
+                    <a href="{{ url_for('static', filename='uploads/' ~ claim.proof_image_path) }}" target="_blank" class="inline-block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-48">
+                        <img src="{{ url_for('static', filename='uploads/' ~ claim.proof_image_path) }}" alt="Proof" class="max-h-48 object-contain">
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- In-App Messaging Thread (Real-time Coordination) -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col h-[480px]">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-comments text-blue-500"></i> Direct Claim Discussion
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Private channel between claimant and reporter/security office.</p>
+                    </div>
+                </div>
+
+                <!-- Messages Feed -->
+                <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="chat-messages">
+                    {% if messages %}
+                        {% for msg in messages %}
+                        <div class="flex flex-col {% if msg.sender_id == current_user.id %}items-end{% else %}items-start{% endif %}">
+                            <div class="max-w-md p-3.5 rounded-2xl text-xs {% if msg.sender_id == current_user.id %} bg-blue-600 text-white rounded-br-none {% else %} bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none {% endif %}">
+                                <p class="font-bold text-[10px] {% if msg.sender_id == current_user.id %}text-blue-200{% else %}text-slate-400{% endif %} mb-0.5">
+                                    {{ msg.sender.name }} ({{ msg.sender.role.capitalize() }})
+                                </p>
+                                <p class="leading-relaxed">{{ msg.content }}</p>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1">
+                                {{ msg.sent_at.strftime('%I:%M %p') }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="h-full flex items-center justify-center text-center text-xs text-slate-400">
+                            <div>
+                                <i class="fa-regular fa-comment-dots text-2xl mb-1 text-slate-300"></i>
+                                <p>No messages yet. Send a message to coordinate pickup time and verification.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Message Input Form -->
+                <form method="POST" action="{{ url_for('send_claim_message', claim_id=claim.id) }}" class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                    <input type="text" name="content" required placeholder="Type a message to coordinate collection..." 
+                           class="flex-1 px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="px-4 py-2.5 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Auto-scroll chat to bottom
+    const chatContainer = document.getElementById('chat-messages');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+</script>
+{% endblock %}

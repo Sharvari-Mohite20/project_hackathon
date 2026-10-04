@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - CampusFind{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto space-y-6 pt-4">
+
+    <!-- Brand Header -->
+    <div class="text-center space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl font-bold mx-auto shadow-md shadow-blue-500/20">
+            <i class="fa-solid fa-compass"></i>
+        </div>
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white">Campus Portal Sign In</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Access your university lost & found account.</p>
+    </div>
+
+    <!-- Quick Demo Accounts (Hackathon Judge Super-Shortcut) -->
+    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-200 dark:border-indigo-900/60 shadow-sm space-y-3">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <h3 class="text-xs font-black uppercase tracking-wider text-indigo-950 dark:text-indigo-200">
+                ⚡ 1-Click Demo Login (For Judges & Evaluators)
+            </h3>
+        </div>
+        <p class="text-[11px] text-slate-600 dark:text-slate-400">Click any role below to sign in instantly with seeded sample data:</p>
+        
+        <div class="grid grid-cols-1 gap-2">
+            <a href="{{ url_for('quick_login', role_or_email='aarav') }}" class="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/50 border border-slate-200 dark:border-slate-800 transition flex items-center justify-between text-xs group">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                        A
+                    </div>
+                    <div class="text-left">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">Aarav Sharma (Student)</p>
+                        <p class="text-[10px] text-slate-400">Has lost AirPods & active approved claim</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right text-xs text-blue-500 group-hover:translate-x-1 transition transform"></i>
+            </a>
+
+            <a href="{{ url_for('quick_login', role_or_email='priya') }}" class="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-800 transition flex items-center justify-between text-xs group">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                        P
+                    </div>
+                    <div class="text-left">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">Priya Patel (Student / Finder)</p>
+                        <p class="text-[10px] text-slate-400">Discovered AirPods & keys on campus</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right text-xs text-purple-500 group-hover:translate-x-1 transition transform"></i>
+            </a>
+
+            <a href="{{ url_for('quick_login', role_or_email='admin') }}" class="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-slate-200 dark:border-slate-800 transition flex items-center justify-between text-xs group">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                        <i class="fa-solid fa-shield-halved text-xs"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">Officer Rajesh (Campus Security)</p>
+                        <p class="text-[10px] text-slate-400">Security Head - Locker custody & PIN audits</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right text-xs text-emerald-500 group-hover:translate-x-1 transition transform"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Standard Login Form -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        
+        <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">College Email</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-envelope text-xs"></i>
+                    </div>
+                    <input type="email" name="email" required placeholder="your.name@apexuni.edu"
+                           class="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Password</label>
+                    <span class="text-[10px] text-slate-400">Demo pwd: student123 or admin123</span>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                    </div>
+                    <input type="password" name="password" required placeholder="••••••••"
+                           class="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 transition">
+                Sign In to Account
+            </button>
+        </form>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">
+            Don't have an account? 
+            <a href="{{ url_for('register') }}" class="font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                Create one now
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

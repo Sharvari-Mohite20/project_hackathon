@@ -1,0 +1,82 @@
+/* CampusFind - Custom Enhancements & Animations */
+
+:root {
+  --primary-blue: #2563eb;
+  --primary-dark: #1e3a8a;
+  --accent-amber: #f59e0b;
+  --success-emerald: #10b981;
+  --danger-rose: #f43f5e;
+}
+
+/* Glassmorphism Accents */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.7);
+}
+
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(55, 65, 81, 0.7);
+}
+
+/* Pulse animation for urgent notices */
+@keyframes urgent-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(244, 63, 94, 0);
+  }
+}
+
+.urgent-badge {
+  animation: urgent-glow 2s infinite ease-in-out;
+}
+
+/* Match Score Progress Bar Fill */
+.match-bar-gradient {
+  background: linear-gradient(90deg, #f59e0b 0%, #10b981 100%);
+}
+
+/* Custom interactive campus map nodes */
+.campus-map-container {
+  position: relative;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 1rem;
+  overflow: hidden;
+  min-height: 480px;
+}
+
+.dark .campus-map-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.map-node-pin {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.map-node-pin:hover {
+  transform: scale(1.15) translateY(-4px);
+  z-index: 30;
+}
+
+/* Print Styles for QR Claim Pass */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  nav, footer, .no-print, #quick-demo-banner {
+    display: none !important;
+  }
+  .claim-pass-sheet {
+    box-shadow: none !important;
+    border: 2px dashed #000 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
